@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ thống Báo cáo Giao Thầu</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0D1B2A;
+    --navy-mid:   #1B2E42;
+    --navy-light: #243B55;
+    --gold:       #C8922A;
+    --gold-light: #E5B060;
+    --gold-pale:  #FDF5E6;
+    --teal:       #19897A;
+    --teal-light: #E4F4F1;
+    --red:        #B83232;
+    --red-light:  #FDEAEA;
+    --white:      #FFFFFF;
+    --gray-50:    #F7F8FA;
+    --gray-100:   #EEF0F4;
+    --gray-200:   #DDE1E8;
+    --gray-400:   #96A0AE;
+    --gray-600:   #566070;
+    --gray-800:   #2C3748;
+    --text:       #18202C;
+    --radius-sm:  6px;
+    --radius:     10px;
+    --radius-lg:  14px;
+    --shadow:     0 2px 12px rgba(13,27,42,0.09);
+    --shadow-lg:  0 8px 40px rgba(13,27,42,0.15);
+    --transition: 0.18s ease;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--gray-50);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LOGIN ─────────────────────────────────── */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--navy);
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(200,146,42,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(25,137,122,0.10) 0%, transparent 50%);
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 44px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .login-logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+  }
+  .login-logomark {
+    width: 42px; height: 42px;
+    background: var(--navy); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-logomark svg { width: 22px; height: 22px; }
+  .login-brand { line-height: 1.2; }
+  .login-brand-name { font-family: 'Lora', serif; font-size: 17px; color: var(--navy); font-weight: 700; }
+  .login-brand-sub  { font-size: 11px; color: var(--gray-400); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .login-title  { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .login-sub    { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
+  .login-label  { font-size: 12px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
+  .login-select {
+    width: 100%; padding: 11px 14px; font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px; color: var(--text);
+    background: var(--gray-50); border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius); outline: none; margin-bottom: 20px;
+    transition: border-color var(--transition);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%2396A0AE' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .login-select:focus { border-color: var(--navy); background-color: var(--white); }
+  .login-btn {
+    width: 100%; padding: 12px; font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--white);
+    background: var(--navy); border: none; border-radius: var(--radius);
+    cursor: pointer; transition: all var(--transition);
+    letter-spacing: 0.02em;
+  }
+  .login-btn:hover { background: var(--navy-light); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(13,27,42,0.28); }
+  .login-note { text-align: center; font-size: 12px; color: var(--gray-400); margin-top: 18px; }
+
+  /* ── APP SHELL ──────────────────────────────── */
+  #appShell { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--navy);
+    height: 56px; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+  }
+  .hdr-left { display: flex; align-items: center; gap: 11px; }
+  .hdr-mark {
+    width: 30px; height: 30px; background: var(--gold); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hdr-mark svg { width: 16px; height: 16px; }
+  .hdr-title { font-family: 'Lora', serif; font-size: 15px; color: var(--white); font-weight: 600; }
+  .hdr-right { display: flex; align-items: center; gap: 14px; }
+  .hdr-user  { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .hdr-role  {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    background: rgba(200,146,42,0.2); color: var(--gold-light);
+    border: 1px solid rgba(200,146,42,0.35);
+  }
+  .hdr-role.manager { background: rgba(25,137,122,0.2); color: #5FD4C4; border-color: rgba(25,137,122,0.35); }
+  .btn-logout {
+    font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(255,255,255,0.18); background: transparent;
+    color: rgba(255,255,255,0.65); cursor: pointer; transition: all var(--transition);
+    font-family: 'Be Vietnam Pro', sans-serif;
+  }
+  .btn-logout:hover { background: rgba(255,255,255,0.1); color: var(--white); }
+
+  /* NAV */
+  .app-nav {
+    background: var(--white); border-bottom: 1px solid var(--gray-200);
+    padding: 0 28px; display: flex; gap: 2px; overflow-x: auto;
+  }
+  .nav-tab {
+    font-size: 13px; font-weight: 500; color: var(--gray-600);
+    padding: 13px 18px; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all var(--transition); white-space: nowrap;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nav-tab:hover  { color: var(--navy); }
+  .nav-tab.active { color: var(--navy); border-bottom-color: var(--gold); font-weight: 700; }
+
+  /* MAIN */
+  .app-main { flex: 1; max-width: 1100px; margin: 0 auto; padding: 28px 24px; width: 100%; }
+
+  /* ── PAGES ──────────────────────────────────── */
+  .page { display: none; animation: fadeIn 0.22s ease both; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+  .page-heading { margin-bottom: 22px; }
+  .page-heading h2 { font-family: 'Lora', serif; font-size: 22px; color: var(--navy); font-weight: 700; }
+  .page-heading p  { font-size: 13px; color: var(--gray-600); margin-top: 3px; }
+
+  /* ── FORM CARD ──────────────────────────────── */
+  .card {
+    background: var(--white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 26px; margin-bottom: 18px;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--gray-100); margin-bottom: 20px;
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--gold-pale); display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--navy); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px; font-weight: 700; color: var(--gray-600);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .field input, .field select, .field textarea {
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; color: var(--text);
+    background: var(--gray-50); border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius); padding: 9px 12px; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--navy); background: var(--white);
+    box-shadow: 0 0 0 3px rgba(13,27,42,0.07);
+  }
+  .field textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+  .field input.error, .field select.error { border-color: var(--red); }
+
+  /* STATUS CHIPS */
+  .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  .s-opt { display: flex; align-items: center; }
+  .s-opt input[type=radio] { display: none; }
+  .s-chip {
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid var(--gray-200); background: var(--white); color: var(--gray-600);
+    cursor: pointer; transition: all var(--transition); user-select: none;
+  }
+  .s-opt input:checked + .s-chip { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
+
+  /* CALC BOX */
+  .calc-result {
+    background: linear-gradient(135deg, #F7F2E8 0%, #FDF5E6 100%);
+    border: 1.5px solid #EDD9A3; border-radius: var(--radius);
+    padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4px;
+  }
+  .calc-item { display: flex; flex-direction: column; gap: 3px; }
+  .calc-lbl { font-size: 11px; color: var(--gray-600); font-weight: 500; }
+  .calc-val { font-size: 16px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+  .calc-val.pos { color: var(--teal); }
+  .calc-val.neg { color: var(--red); }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn {
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px; font-weight: 700;
+    padding: 10px 22px; border-radius: var(--radius); border: none;
+    cursor: pointer; transition: all var(--transition);
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .btn-primary { background: var(--navy); color: var(--white); }
+  .btn-primary:hover:not(:disabled) { background: var(--navy-light); transform: translateY(-1px); box-shadow: 0 5px 18px rgba(13,27,42,0.24); }
+  .btn-primary:disabled { background: var(--gray-400); cursor: not-allowed; }
+  .btn-ghost { background: var(--gray-100); color: var(--gray-600); }
+  .btn-ghost:hover { background: var(--gray-200); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    background: var(--navy); color: var(--white); border-radius: var(--radius);
+    padding: 14px 20px; font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+    transform: translateY(20px); opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(.4,0,.2,1);
+    max-width: 340px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .toast-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── TABLE ──────────────────────────────────── */
+  .filter-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-row input, .filter-row select {
+    font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px;
+    padding: 8px 12px; border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius); background: var(--white); color: var(--text); outline: none;
+    transition: border-color var(--transition);
+  }
+  .filter-row input:focus, .filter-row select:focus { border-color: var(--navy); }
+  .filter-row input { min-width: 240px; }
+
+  .table-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+  .tbl-wrap   { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--navy); color: rgba(255,255,255,0.85);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 12px 14px; text-align: left; white-space: nowrap;
+  }
+  thead th.r { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--gray-100); transition: background var(--transition); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--gray-50); }
+  tbody td { font-size: 13px; padding: 11px 14px; vertical-align: middle; }
+  .td-bold  { font-weight: 600; color: var(--navy); }
+  .td-muted { color: var(--gray-600); }
+  .td-right { text-align: right; font-variant-numeric: tabular-nums; }
+  .td-pos   { color: var(--teal); font-weight: 700; text-align: right; }
+  .td-neg   { color: var(--red);  font-weight: 700; text-align: right; }
+  .pill {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+  }
+  .pill-done { background: var(--teal-light); color: var(--teal); }
+  .pill-plan { background: var(--gold-pale);  color: #7A5200; }
+  .pill-wip  { background: #EEF0FF; color: #4040B0; }
+  .tbl-empty { text-align: center; padding: 52px 24px; color: var(--gray-400); font-size: 14px; }
+  .tbl-empty .ico { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── KPI + DASHBOARD ────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi {
+    background: var(--white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 20px 22px;
+    border-left: 4px solid transparent;
+  }
+  .kpi.gold-border  { border-color: var(--gold); }
+  .kpi.teal-border  { border-color: var(--teal); }
+  .kpi.navy-border  { border-color: var(--navy); }
+  .kpi.red-border   { border-color: var(--red); }
+  .kpi-lbl { font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .kpi-val { font-size: 24px; font-weight: 800; color: var(--navy); line-height: 1; }
+  .kpi-val.gold { color: var(--gold); }
+  .kpi-val.teal { color: var(--teal); }
+  .kpi-sub { font-size: 11px; color: var(--gray-400); margin-top: 5px; }
+
+  .dash-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+  .dash-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 22px; }
+  .dash-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100); }
+
+  /* Person bars */
+  .p-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .p-row:last-child { margin-bottom: 0; }
+  .p-avatar {
+    width: 36px; height: 36px; border-radius: 50%; color: var(--white);
+    font-size: 13px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .p-info { flex: 1; min-width: 0; }
+  .p-name { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .p-meta { font-size: 11px; color: var(--gray-400); }
+  .p-bar-wrap { width: 120px; flex-shrink: 0; }
+  .p-bar-bg   { background: var(--gray-100); border-radius: 4px; height: 7px; overflow: hidden; }
+  .p-bar-fill { height: 100%; border-radius: 4px; transition: width 0.7s ease; }
+  .p-hq { font-size: 13px; font-weight: 700; color: var(--teal); min-width: 62px; text-align: right; flex-shrink: 0; }
+
+  /* Recent list */
+  .recent-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+  }
+  .recent-row:last-child { border-bottom: none; }
+  .recent-info { flex: 1; min-width: 0; }
+  .recent-name { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .recent-meta { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block; width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: var(--white);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ─────────────────────────────── */
+  @media (max-width: 768px) {
+    .kpi-grid  { grid-template-columns: 1fr 1fr; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .app-main  { padding: 16px; }
+    .login-card { padding: 32px 24px; }
+    .filter-row input { min-width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logomark">
+        <svg viewBox="0 0 22 22" fill="none">
+          <rect x="2" y="2" width="8" height="8" rx="2" fill="#C8922A"/>
+          <rect x="12" y="2" width="8" height="8" rx="2" fill="white" opacity=".6"/>
+          <rect x="2" y="12" width="8" height="8" rx="2" fill="white" opacity=".5"/>
+          <rect x="12" y="12" width="8" height="8" rx="2" fill="white" opacity=".25"/>
+        </svg>
+      </div>
+      <div class="login-brand">
+        <div class="login-brand-name">Giao Thầu XD</div>
+        <div class="login-brand-sub">Hệ thống báo cáo tuần</div>
+      </div>
+    </div>
+    <h1 class="login-title">Chào mừng trở lại</h1>
+    <p class="login-sub">Chọn tên để bắt đầu nhập báo cáo tuần</p>
+
+    <label class="login-label" for="selUser">Tên nhân viên</label>
+    <select class="login-select" id="selUser">
+      <option value="">— Chọn tên —</option>
+      <optgroup label="Nhân viên">
+        <option>Nguyễn Công Bảy</option>
+        <option>Nguyễn Hữu Đức</option>
+        <option>Nguyễn Khắc Quang</option>
+        <option>Nguyễn Xuân Sang</option>
+        <option>Thái Văn Khương</option>
+      </optgroup>
+      <optgroup label="Quản lý">
+        <option value="__ql__">Quản lý (xem tổng hợp)</option>
+      </optgroup>
+    </select>
+    <button class="login-btn" onclick="doLogin()">Đăng nhập →</button>
+    <p class="login-note">Không cần mật khẩu — hệ thống nội bộ</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     APP SHELL
+═══════════════════════════════════════════ -->
+<div id="appShell" style="display:none;flex-direction:column;min-height:100vh">
+  <header class="app-header">
+    <div class="hdr-left">
+      <div class="hdr-mark">
+        <svg viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".55"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".45"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".25"/>
+        </svg>
+      </div>
+      <span class="hdr-title">Giao Thầu XD</span>
+    </div>
+    <div class="hdr-right">
+      <span class="hdr-user" id="hdrUser"></span>
+      <span class="hdr-role" id="hdrRole"></span>
+      <button class="btn-logout" onclick="doLogout()">Đăng xuất</button>
+    </div>
+  </header>
+
+  <nav class="app-nav" id="appNav">
+    <div class="nav-tab active" data-tab="nhaplieu" onclick="switchTab('nhaplieu')">✏️ Nhập liệu</div>
+    <div class="nav-tab" data-tab="danhsach" onclick="switchTab('danhsach')">📋 Danh sách của tôi</div>
+    <div class="nav-tab" data-tab="dashboard" id="tabDash" onclick="switchTab('dashboard')" style="display:none">📊 Dashboard tổng hợp</div>
+  </nav>
+
+  <main class="app-main">
+
+    <!-- ── NHẬP LIỆU ─────────────────────────── -->
+    <section class="page active" id="page-nhaplieu">
+      <div class="page-heading">
+        <h2>Nhập báo cáo gói thầu</h2>
+        <p>Điền thông tin đàm phán tuần này — hệ thống tự tính hiệu quả</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">📋</div>
+          <span class="card-title">Thông tin gói thầu</span>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="field">
+            <label>Tên gói thầu *</label>
+            <input type="text" id="f-ten" placeholder="VD: Xây thô khối A – dự án Jade Square" />
+          </div>
+          <div class="field">
+            <label>NCC được chọn</label>
+            <input type="text" id="f-ncc" placeholder="VD: CTXD Hoàng Gia" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Tuần báo cáo</label>
+            <input type="text" id="f-tuan" placeholder="VD: Tuần 20 – T5/2026" />
+          </div>
+          <div class="field">
+            <label>Tình trạng *</label>
+            <div class="status-row">
+              <label class="s-opt"><input type="radio" name="tt" value="Đã hoàn thành" checked><span class="s-chip">✅ Hoàn thành</span></label>
+              <label class="s-opt"><input type="radio" name="tt" value="Kế hoạch tiếp theo"><span class="s-chip">🔜 Tiếp theo</span></label>
+              <label class="s-opt"><input type="radio" name="tt" value="Đang xử lý"><span class="s-chip">⚙️ Đang xử lý</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">💰</div>
+          <span class="card-title">Số liệu đàm phán</span>
+        </div>
+        <div class="grid-3" style="margin-bottom:16px">
+          <div class="field">
+            <label>Giá trị gốc (VNĐ)</label>
+            <input type="text" id="f-gg" placeholder="VD: 1500000000" oninput="calcHQ()" />
+          </div>
+          <div class="field">
+            <label>Giá trị giao thầu (VNĐ)</label>
+            <input type="text" id="f-gt" placeholder="VD: 1320000000" oninput="calcHQ()" />
+          </div>
+          <div class="field">
+            <label>Hiệu quả (tự tính)</label>
+            <div class="calc-result">
+              <div class="calc-item">
+                <span class="calc-lbl">Tiết kiệm (VNĐ)</span>
+                <span class="calc-val" id="c-vnd">—</span>
+              </div>
+              <div class="calc-item" style="text-align:right">
+                <span class="calc-lbl">Tỷ lệ</span>
+                <span class="calc-val" id="c-pct">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-1">
+          <div class="field">
+            <label>Ghi chú / Diễn biến đàm phán</label>
+            <textarea id="f-note" placeholder="VD: Đã chốt giá sau 2 vòng thương lượng. NCC đồng ý giảm 12% so với báo giá ban đầu..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="resetForm()">🔄 Nhập mới</button>
+        <button class="btn btn-primary" id="btnSave" onclick="saveRecord()">
+          <span id="btnTxt">💾 Lưu gói thầu</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── DANH SÁCH ──────────────────────────── -->
+    <section class="page" id="page-danhsach">
+      <div class="page-heading">
+        <h2>Danh sách gói thầu của tôi</h2>
+        <p>Tất cả gói thầu bạn đã ghi nhận trong hệ thống</p>
+      </div>
+      <div class="filter-row">
+        <input type="text" id="srch" placeholder="🔍 Tìm tên gói thầu..." oninput="renderTable()">
+        <select id="fStatus" onchange="renderTable()">
+          <option value="">Tất cả tình trạng</option>
+          <option>Đã hoàn thành</option>
+          <option>Kế hoạch tiếp theo</option>
+          <option>Đang xử lý</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Gói thầu</th>
+                <th>Tuần</th>
+                <th>NCC</th>
+                <th class="r">Giá gốc</th>
+                <th class="r">Giao thầu</th>
+                <th class="r">Hiệu quả</th>
+                <th>Tình trạng</th>
+              </tr>
+            </thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+          <div class="tbl-empty" id="tblEmpty">
+            <div class="ico">📂</div>
+            Chưa có gói thầu nào. Hãy nhập báo cáo đầu tiên!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DASHBOARD ──────────────────────────── -->
+    <section class="page" id="page-dashboard">
+      <div class="page-heading">
+        <h2>Dashboard tổng hợp</h2>
+        <p>Toàn bộ dữ liệu từ tất cả nhân viên</p>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-title">📊 Hiệu quả theo nhân viên</div>
+          <div id="personBars"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-title">📋 Gói thầu gần nhất</div>
+          <div id="recentList"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <span id="toastMsg">Đã lưu thành công!</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const USERS = ['Nguyễn Công Bảy','Nguyễn Hữu Đức','Nguyễn Khắc Quang','Nguyễn Xuân Sang','Thái Văn Khương'];
+const COLORS = ['#0D1B2A','#19897A','#C8922A','#6C5CE7','#B83232'];
+
+let currentUser = null;
+let isManager   = false;
+
+// Persistent storage key
+const STORE_KEY = 'gtxd_data_v2';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { return []; }
+}
+function saveData(arr) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); } catch {}
+}
+
+// Seed với dữ liệu mẫu nếu chưa có
+let allData = loadData();
+if (!allData.length) {
+  allData = [
+    {id:1,user:'Nguyễn Công Bảy',tuan:'Tuần 18 – T5/2026',ten:'Xây thô khối A – Jade Square',ncc:'CTXD Hoàng Gia',gg:1500000000,gt:1320000000,hq:180000000,hqp:12,note:'Chốt sau 2 vòng TL',tt:'Đã hoàn thành'},
+    {id:2,user:'Nguyễn Công Bảy',tuan:'Tuần 18 – T5/2026',ten:'MEP tòa nhà văn phòng B2',ncc:'Cơ điện Minh Anh',gg:850000000,gt:790000000,hq:60000000,hqp:7.06,note:'NCC giảm 7% vật tư',tt:'Đã hoàn thành'},
+    {id:3,user:'Nguyễn Hữu Đức',tuan:'Tuần 18 – T5/2026',ten:'Hoàn thiện nội thất căn hộ mẫu',ncc:'Nội thất Đại Phát',gg:2200000000,gt:1980000000,hq:220000000,hqp:10,note:'Đã ký HĐ',tt:'Đã hoàn thành'},
+    {id:4,user:'Nguyễn Xuân Sang',tuan:'Tuần 19 – T5/2026',ten:'Hệ thống PCCC tháp C',ncc:'An Toàn Việt',gg:3100000000,gt:2750000000,hq:350000000,hqp:11.29,note:'Chốt sau kiểm tra thiết kế',tt:'Đã hoàn thành'},
+    {id:5,user:'Nguyễn Khắc Quang',tuan:'Tuần 19 – T5/2026',ten:'San lấp mặt bằng GĐ2',ncc:'Đang đàm phán',gg:900000000,gt:null,hq:null,hqp:null,note:'Còn 2 NCC cạnh tranh',tt:'Kế hoạch tiếp theo'},
+    {id:6,user:'Thái Văn Khương',tuan:'Tuần 20 – T5/2026',ten:'Hệ thống thang máy tòa tháp A',ncc:'Schindler VN',gg:4500000000,gt:4050000000,hq:450000000,hqp:10,note:'Đã ký HĐ chính thức',tt:'Đã hoàn thành'},
+  ];
+  saveData(allData);
+}
+let nextId = allData.length ? Math.max(...allData.map(r=>r.id)) + 1 : 1;
+
+// ═══════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════
+function doLogin() {
+  const v = document.getElementById('selUser').value;
+  if (!v) { showToast('Vui lòng chọn tên!', '⚠️'); return; }
+  isManager   = v === '__ql__';
+  currentUser = isManager ? 'Quản lý' : v;
+  document.getElementById('hdrUser').textContent = currentUser;
+  const roleEl = document.getElementById('hdrRole');
+  roleEl.textContent = isManager ? 'Quản lý' : 'Nhân viên';
+  roleEl.className   = 'hdr-role' + (isManager ? ' manager' : '');
+  document.getElementById('tabDash').style.display = isManager ? '' : 'none';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display    = 'flex';
+  if (isManager) switchTab('dashboard'); else switchTab('nhaplieu');
+}
+function doLogout() {
+  currentUser = null; isManager = false;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display    = 'none';
+  document.getElementById('selUser').value = '';
+}
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function switchTab(t) {
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  const tab = document.querySelector(`[data-tab="${t}"]`);
+  if (tab) tab.classList.add('active');
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  const pg = document.getElementById('page-'+t);
+  if (pg) pg.classList.add('active');
+  if (t === 'danhsach') renderTable();
+  if (t === 'dashboard') renderDash();
+}
+
+// ═══════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════
+function parseNum(s) {
+  if (!s && s !== 0) return null;
+  const n = parseFloat(String(s).replace(/[^\d.-]/g, ''));
+  return isNaN(n) ? null : n;
+}
+function fmtV(v) {
+  if (v == null) return '—';
+  return new Intl.NumberFormat('vi-VN').format(Math.round(v));
+}
+function pillClass(tt) {
+  if (tt === 'Đã hoàn thành') return 'pill-done';
+  if (tt === 'Kế hoạch tiếp theo') return 'pill-plan';
+  return 'pill-wip';
+}
+function showToast(msg, icon='✅') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent  = msg;
+  document.getElementById('toastIcon').textContent = icon;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════
+// CALC
+// ═══════════════════════════════════════════
+function calcHQ() {
+  const gg = parseNum(document.getElementById('f-gg').value);
+  const gt = parseNum(document.getElementById('f-gt').value);
+  const vEl = document.getElementById('c-vnd');
+  const pEl = document.getElementById('c-pct');
+  if (gg && gt) {
+    const hq  = gg - gt;
+    const pct = (hq / gg * 100).toFixed(2);
+    vEl.textContent = fmtV(hq) + ' đ';
+    pEl.textContent = pct + '%';
+    const cls = hq >= 0 ? 'pos' : 'neg';
+    vEl.className = 'calc-val ' + cls;
+    pEl.className = 'calc-val ' + cls;
+  } else {
+    vEl.textContent = '—'; vEl.className = 'calc-val';
+    pEl.textContent = '—'; pEl.className = 'calc-val';
+  }
+}
+
+// ═══════════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════════
+function saveRecord() {
+  const ten = document.getElementById('f-ten').value.trim();
+  if (!ten) {
+    document.getElementById('f-ten').classList.add('error');
+    document.getElementById('f-ten').focus();
+    showToast('Vui lòng nhập tên gói thầu!', '⚠️'); return;
+  }
+  document.getElementById('f-ten').classList.remove('error');
+
+  const btn = document.getElementById('btnSave');
+  const txt = document.getElementById('btnTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> Đang lưu...';
+
+  setTimeout(() => {
+    const gg = parseNum(document.getElementById('f-gg').value);
+    const gt = parseNum(document.getElementById('f-gt').value);
+    const hq  = (gg && gt) ? gg - gt : null;
+    const hqp = (gg && hq != null) ? parseFloat((hq / gg * 100).toFixed(2)) : null;
+    const rec = {
+      id: nextId++,
+      user: currentUser,
+      tuan: document.getElementById('f-tuan').value.trim() || 'Chưa ghi tuần',
+      ten,
+      ncc:  document.getElementById('f-ncc').value.trim() || '—',
+      gg, gt, hq, hqp,
+      note: document.getElementById('f-note').value.trim(),
+      tt:   document.querySelector('input[name=tt]:checked').value,
+    };
+    allData.push(rec);
+    saveData(allData);
+    btn.disabled = false;
+    txt.innerHTML = '💾 Lưu gói thầu';
+    showToast('Gói thầu đã được lưu thành công!', '✅');
+    resetForm();
+  }, 700);
+}
+
+function resetForm() {
+  ['f-ten','f-ncc','f-tuan','f-gg','f-gt','f-note'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = ''; el.classList.remove('error');
+  });
+  document.querySelector('input[name=tt]').checked = true;
+  calcHQ();
+}
+
+// ═══════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════
+function renderTable() {
+  const q  = (document.getElementById('srch').value || '').toLowerCase();
+  const st = document.getElementById('fStatus').value;
+  const rows = allData.filter(r => {
+    if (!isManager && r.user !== currentUser) return false;
+    if (q && !r.ten.toLowerCase().includes(q)) return false;
+    if (st && r.tt !== st) return false;
+    return true;
+  });
+  const body  = document.getElementById('tblBody');
+  const empty = document.getElementById('tblEmpty');
+  if (!rows.length) { body.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  body.innerHTML = rows.map(r => {
+    const hqClass = r.hq == null ? '' : r.hq >= 0 ? 'td-pos' : 'td-neg';
+    return `<tr>
+      <td class="td-bold">${r.ten}</td>
+      <td class="td-muted">${r.tuan}</td>
+      <td>${r.ncc}</td>
+      <td class="td-right td-muted">${fmtV(r.gg)}</td>
+      <td class="td-right td-muted">${fmtV(r.gt)}</td>
+      <td class="${hqClass}">${r.hq != null ? fmtV(r.hq) + (r.hqp ? `<br><span style="font-size:11px;opacity:.75">(${r.hqp}%)</span>` : '') : '—'}</td>
+      <td><span class="pill ${pillClass(r.tt)}">${r.tt}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function renderDash() {
+  const data = allData;
+  const done = data.filter(r => r.tt === 'Đã hoàn thành');
+  const totalGT  = data.reduce((s,r) => s + (r.gt  || 0), 0);
+  const totalHQ  = data.reduce((s,r) => s + (r.hq  || 0), 0);
+  const totalGG  = data.reduce((s,r) => s + (r.gg  || 0), 0);
+  const avgPct   = totalGG ? (totalHQ / totalGG * 100).toFixed(1) : 0;
+
+  // KPIs
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi navy-border">
+      <div class="kpi-lbl">Tổng gói thầu</div>
+      <div class="kpi-val">${data.length}</div>
+      <div class="kpi-sub">${done.length} hoàn thành · ${data.length - done.length} đang xử lý</div>
+    </div>
+    <div class="kpi gold-border">
+      <div class="kpi-lbl">Tổng giao thầu</div>
+      <div class="kpi-val gold">${(totalGT/1e9).toFixed(2)} tỷ</div>
+      <div class="kpi-sub">VNĐ</div>
+    </div>
+    <div class="kpi teal-border">
+      <div class="kpi-lbl">Tổng hiệu quả</div>
+      <div class="kpi-val teal">${(totalHQ/1e6).toFixed(0)} triệu</div>
+      <div class="kpi-sub">Tiết kiệm được</div>
+    </div>
+    <div class="kpi red-border">
+      <div class="kpi-lbl">Hiệu quả TB</div>
+      <div class="kpi-val">${avgPct}%</div>
+      <div class="kpi-sub">Trên toàn bộ gói</div>
+    </div>`;
+
+  // Person bars
+  const personHQ = USERS.map((u,i) => {
+    const uRows = data.filter(r => r.user === u);
+    const hq = uRows.reduce((s,r) => s + (r.hq || 0), 0);
+    return { u, i, hq, count: uRows.length };
+  });
+  const maxHQ = Math.max(...personHQ.map(p => p.hq), 1);
+  document.getElementById('personBars').innerHTML = personHQ.map(p => `
+    <div class="p-row">
+      <div class="p-avatar" style="background:${COLORS[p.i]}">${p.u.split(' ').pop()[0]}</div>
+      <div class="p-info">
+        <div class="p-name">${p.u}</div>
+        <div class="p-meta">${p.count} gói thầu</div>
+      </div>
+      <div class="p-bar-wrap">
+        <div class="p-bar-bg">
+          <div class="p-bar-fill" style="width:${Math.round(p.hq/maxHQ*100)}%;background:${COLORS[p.i]}"></div>
+        </div>
+      </div>
+      <div class="p-hq">${(p.hq/1e6).toFixed(0)}tr</div>
+    </div>`).join('');
+
+  // Recent
+  const recent = [...data].reverse().slice(0, 6);
+  document.getElementById('recentList').innerHTML = recent.map(r => `
+    <div class="recent-row">
+      <div class="recent-info">
+        <div class="recent-name">${r.ten}</div>
+        <div class="recent-meta">${r.user} · ${r.tuan}</div>
+      </div>
+      <span class="pill ${pillClass(r.tt)}" style="flex-shrink:0">${r.tt === 'Đã hoàn thành' ? '✅' : r.tt === 'Kế hoạch tiếp theo' ? '🔜' : '⚙️'}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
